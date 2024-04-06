@@ -25,7 +25,7 @@ public class FourthPathMod : BloonsTD6Mod
 }
 public class FourthPath : PathPlusPlus
 {
-    public override string Tower => "WizardMonkey";
+    public override string Tower => "AlchemistMonkey";
     public override int UpgradeCount => 5; // Increase this up to 5 as you create your Upgrades
 }
 public class RangeUpgrade : UpgradePlusPlus<FourthPath>
