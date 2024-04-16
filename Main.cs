@@ -10,35 +10,57 @@ using BTD_Mod_Helper.Extensions;
 using Il2CppAssets.Scripts.Models.Towers.Projectiles;
 using Il2CppAssets.Scripts.Unity;
 using Il2CppAssets.Scripts.Models.Towers.Weapons;
+using Il2CppAssets.Scripts.Models.Towers.Filters;
+using Il2CppAssets.Scripts.Unity.Towers.Projectiles;
+using Il2CppAssets.Scripts.Models.Towers.Mods;
+using Il2CppAssets.Scripts.Models.Gameplay.Mods;
+using Il2CppAssets.Scripts.Simulation.Towers.Projectiles.Behaviors;
+using Il2CppAssets.Scripts.Models.Towers.Behaviors;
+using Il2CppAssets.Scripts.Models.Towers.Behaviors.Emissions;
+using Il2CppAssets.Scripts.Models.Towers.Behaviors.Abilities.Behaviors;
+using Il2CppAssets.Scripts.Simulation.Towers.Projectiles;
+using System.Linq;
+using Il2CppAssets.Scripts.Unity.Towers.Projectiles.Behaviors;
+using Il2CppAssets.Scripts.Models.Towers.Behaviors.Attack;
+using Il2CppAssets.Scripts.Models.Towers.Weapons.Behaviors;
+using System.Runtime.ExceptionServices;
+using HarmonyLib;
+using Il2CppAssets.Scripts.Models.Bloons.Behaviors;
+using Il2CppAssets.Scripts.Models;
 
-[assembly: MelonInfo(typeof(FourthPath.FourthPathMod), FourthPath.ModHelperData.Name, FourthPath.ModHelperData.Version, FourthPath.ModHelperData.RepoOwner)]
+[assembly: MelonInfo(typeof(FourthPath.AlchemistCombatPath), FourthPath.ModHelperData.Name, FourthPath.ModHelperData.Version, FourthPath.ModHelperData.RepoOwner)]
 [assembly: MelonGame("Ninja Kiwi", "BloonsTD6")]
 
 namespace FourthPath;
 
-public class FourthPathMod : BloonsTD6Mod
+public class AlchemistCombatPath : BloonsTD6Mod
 {
     public override void OnApplicationStart()
     {
-        ModHelper.Msg<FourthPathMod>("FourthPath loaded!");
+        ModHelper.Msg<AlchemistCombatPath>("FourthPath loaded!");
     }
 }
 public class FourthPath : PathPlusPlus
 {
-    public override string Tower => "AlchemistMonkey";
+    public override string Tower => "Alchemist";
     public override int UpgradeCount => 5; // Increase this up to 5 as you create your Upgrades
 }
-public class RangeUpgrade : UpgradePlusPlus<FourthPath>
+public class OutvisibilityPotion : UpgradePlusPlus<FourthPath>
 {
-    public override int Cost => 500;
+    public override int Cost => 850;
     public override int Tier => 1;
-    public override string Icon => VanillaSprites.LongRangeDartsUpgradeIcon;
+    public override string Icon => VanillaSprites.MonkeySenseUpgradeIcon;
 
-    public override string Description => "The Tower has more range than normal.";
+    public override string Description => "The Alchemist's improved formula makes his eyesight much better, he can even see camos!";
 
     public override void ApplyUpgrade(TowerModel towerModel)
     {
-        towerModel.IncreaseRange(15);
+        towerModel.IncreaseRange(10);
+
+        foreach (var damageModel in towerModel.GetDescendants<DamageModel>().ToArray())
+        {
+            towerModel.GetDescendants<FilterInvisibleModel>().ForEach(model => model.isActive = false);
+        }
 
         if (IsHighestUpgrade(towerModel))
         {
@@ -46,77 +68,81 @@ public class RangeUpgrade : UpgradePlusPlus<FourthPath>
         }
     }
 }
-public class LeadPoppingPowerUpgrade : UpgradePlusPlus<FourthPath>
+public class ReactiveFormula : UpgradePlusPlus<FourthPath>
 {
-    public override int Cost => 1000;
+    public override int Cost => 320;
     public override int Tier => 2;
-    public override string Icon => VanillaSprites.RedHotRangsUpgradeIcon;
+    public override string Icon => VanillaSprites.BloonDissolverUpgradeIcon;
     //public override string Portrait => "700Sylveon_PSMD";
 
-    public override string Description => "The Tower's attacks can pop Lead bloons."; // and Frozen
+    public override string Description => "The Alchemist has made a new formula that grows stronger with other upgrades.";
 
     public override void ApplyUpgrade(TowerModel towerModel)
     {
         foreach (var damageModel in towerModel.GetDescendants<DamageModel>().ToArray())
         {
-            damageModel.immuneBloonProperties &= ~BloonProperties.Frozen;
-            damageModel.immuneBloonProperties &= ~BloonProperties.Lead;
+            if (towerModel.appliedUpgrades.Contains(UpgradeType.AcidicMixtureDip)) damageModel.damage += 1;
+            if (towerModel.appliedUpgrades.Contains(UpgradeType.PerishingPotions)) damageModel.damage += 1;
         }
-
-        if (IsHighestUpgrade(towerModel))
-        {
-            // apply a custom display, if you want
-        }
-    }
-}
-public class PierceAndDamageUpgrade : UpgradePlusPlus<FourthPath>
-{
-    public override int Cost => 5000; //3000+350+
-    public override int Tier => 3;
-    public override string Icon => VanillaSprites.CrossBowUpgradeIcon;
-
-    public override string Description => "Increases pierce and damage of the Tower's attacks.";
-    //public override string Portrait => "700Sylveon_PSMD";
-
-    public override void ApplyUpgrade(TowerModel towerModel)
-    {
-        foreach (var damageModel in towerModel.GetDescendants<DamageModel>().ToArray())
-        {
-            damageModel.damage += 3;
-        }
-        foreach (var projectileModel in towerModel.GetDescendants<ProjectileModel>().ToArray())
-        {
-            projectileModel.pierce += 3;
-        }
-
-
-        if (IsHighestUpgrade(towerModel))
-        {
-            // apply a custom display, if you want
-        }
-    }
-}
-
-public class LaserShockUpgrade : UpgradePlusPlus<FourthPath>
-{
-    public override int Cost => 10000; //3000+350+
-    public override int Tier => 4;
-    public override string Icon => VanillaSprites.LaserShockUpgradeIcon;
-
-    public override string Description => "Adds a Laser Shock effect to the Tower's attacks";
-    //public override string Portrait => "700Sylveon_PSMD";
-
-    public override void ApplyUpgrade(TowerModel towerModel)
-    {
-        TowerModel dartling = Game.instance.model.GetTowerFromId(TowerType.DartlingGunner + "-300");
-        AddBehaviorToBloonModel electricShock = dartling.GetDescendant<AddBehaviorToBloonModel>().Duplicate();
-        electricShock.filters = null;
 
         foreach (var weaponModel in towerModel.GetDescendants<WeaponModel>().ToArray())
         {
-            weaponModel.projectile.AddBehavior(electricShock);
-            weaponModel.projectile.collisionPasses = new[] { 0, 1 };
+            foreach (var behavior in weaponModel.projectile.GetBehaviors<CreateProjectileOnExhaustFractionModel>().ToArray())
+            {
+                if (towerModel.appliedUpgrades.Contains(UpgradeType.PerishingPotions)) 
+                   behavior.projectile.hasDamageModifiers = true;
+                if (towerModel.appliedUpgrades.Contains(UpgradeType.PerishingPotions)) 
+                   behavior.projectile.AddBehavior(new DamageModifierForTagModel("aaa", "Moabs", 1, 15, false, false) { name = "DamageModifierForTagModelAcidSplash" });
+            }
         }
+
+        foreach (var overtimeModel in towerModel.GetDescendants<DamageOverTimeModel>().ToArray())
+        {
+            if (towerModel.appliedUpgrades.Contains(UpgradeType.StrongerAcid)) overtimeModel.Interval -= 0.5f;
+            if (towerModel.appliedUpgrades.Contains(UpgradeType.StrongerAcid)) overtimeModel.displayLifetime += 1.5f;
+        }
+
+        foreach (var cashMod in towerModel.GetDescendants<CashIncreaseModel>().ToArray())
+            {
+            if (towerModel.appliedUpgrades.Contains(UpgradeType.RubberToGold)) cashMod.increase += 2;
+            }
+
+        foreach (WeaponModel weaponModel in towerModel.GetDescendants<WeaponModel>().ToArray())
+        {
+            if (weaponModel.name.Contains("AcidSplash")) { } else
+            {
+                if (towerModel.appliedUpgrades.Contains(UpgradeType.BerserkerBrew)) weaponModel.Rate *= 0.90f;
+                if (towerModel.appliedUpgrades.Contains(UpgradeType.StrongerStimulant)) weaponModel.Rate *= 0.95f;
+                if (towerModel.appliedUpgrades.Contains(UpgradeType.FasterThrowing)) weaponModel.Rate *= 0.80f;                
+            }
+        }       
+
+        if (towerModel.appliedUpgrades.Contains(UpgradeType.BerserkerBrew)) towerModel.IncreaseRange(2);
+        if (towerModel.appliedUpgrades.Contains(UpgradeType.StrongerStimulant)) towerModel.IncreaseRange(3);
+        if (towerModel.appliedUpgrades.Contains(UpgradeType.PermanentBrew)) towerModel.IncreaseRange(5);
+
+        if (IsHighestUpgrade(towerModel))
+        {
+            // apply a custom display, if you want
+        }
+    }
+}
+public class LookMaTwoHands : UpgradePlusPlus<FourthPath>
+{
+    public override int Cost => 3140; //3000+350+
+    public override int Tier => 3;
+    public override string Icon => VanillaSprites.DoubleShotUpgradeIcon;
+
+    public override string Description => "The Alchemist realizes he has two hands and throws double the potions.";
+    //public override string Portrait => "700Sylveon_PSMD";
+
+    public override void ApplyUpgrade(TowerModel towerModel)
+    {
+        var potion = towerModel.GetWeapons().First(w => w.name == "WeaponModel_Weapon").Duplicate();
+        potion.name = "SecondPotion";
+        potion.ejectX = 9.5f; potion.ejectY = 1.5f;
+        potion.customStartCooldown = 0.5f; potion.animationOffset = 0.5f;
+        towerModel.GetAttackModel().AddWeapon(weaponToAdd:potion);
 
         if (IsHighestUpgrade(towerModel))
         {
@@ -125,24 +151,65 @@ public class LaserShockUpgrade : UpgradePlusPlus<FourthPath>
     }
 }
 
-public class AttackSpeedUpgrade : UpgradePlusPlus<FourthPath>
+public class LaserEyes : UpgradePlusPlus<FourthPath>
 {
-    public override int Cost => 15000;
-    public override int Tier => 5;
-    public override string Icon => VanillaSprites.SemiAutomaticUpgradeIcon;
+    public override int Cost => 12000; //3000+350+
+    public override int Tier => 4;
+    public override string Icon => VanillaSprites.LaserBlastUpgradeIcon;
 
-    public override string Description => "Triples the Tower's attack speed.";
+    public override string Description => "The Alchemist drank something strange, and now can fire lasers from his eyes.";
     //public override string Portrait => "700Sylveon_PSMD";
 
     public override void ApplyUpgrade(TowerModel towerModel)
     {
-        foreach (var weaponModel in towerModel.GetWeapons().ToArray())
+        TowerModel alchemist = Game.instance.model.GetTowerFromId(TowerType.Alchemist = "TransformedMonkey");
+        var laser = alchemist.GetAttackModels().First(m => m.name.Contains("TransformedAttack")).Duplicate();
+        laser.name = "Laser";
+        laser.GetDescendant<WeaponModel>().Rate = 0.8f;
+        laser.fireWithoutTarget = false;
+        laser.GetDescendants<FilterInvisibleModel>().ForEach(model => model.isActive = false);
+        laser.range = towerModel.range;
+        laser.GetDescendant<WeaponModel>().animateOnMainAttack = false;
+
+        towerModel.AddBehavior(laser);
+        
+        if (IsHighestUpgrade(towerModel))
         {
-            weaponModel.Rate /= 3;
-            weaponModel.rate /= 3;
+            // apply a custom display, if you want
+        }
+    }
+}
+
+public class RbeEqualsPopsSquared : UpgradePlusPlus<FourthPath>
+{
+    public override int Cost => 25000;
+    public override int Tier => 5;
+    public override string Icon => VanillaSprites.TheBloonSolverUpgradeIcon;
+
+    public override string Description => "Highly reactive formula spells the end of bloons.";
+    //public override string Portrait => "700Sylveon_PSMD";
+
+    public override void ApplyUpgrade(TowerModel towerModel)
+    {
+        foreach (var weaponModel in towerModel.GetDescendants<WeaponModel>().ToArray())
+        {
+            foreach (var behavior in weaponModel.projectile.GetBehaviors<CreateProjectileOnExhaustFractionModel>().ToArray())
+            {
+                if (towerModel.appliedUpgrades.Contains(UpgradeType.PerishingPotions)) 
+                   behavior.projectile.hasDamageModifiers = true;
+                if (towerModel.appliedUpgrades.Contains(UpgradeType.PerishingPotions)) 
+                   behavior.projectile.AddBehavior(new DamageModifierForTagModel("aaa", "Moabs", 1, 49, false, false) { name = "DamageModifierForTagModelAcidSplash" });
+            }
         }
         
+        foreach (var weaponModel in towerModel.GetWeapons().ToArray())
+        {
+            if (towerModel.appliedUpgrades.Contains(UpgradeType.AlchemistFasterThrowing)) weaponModel.Rate *= 0.40f;
+            if (towerModel.appliedUpgrades.Contains(UpgradeType.LargerPotions)) weaponModel.projectile.scale *= 1.30f;
+        }
 
+        towerModel.GetAttackModels().First(m => m.name.Contains("Laser")).GetDescendant<WeaponModel>().rate *= 0.5f;
+        
         if (IsHighestUpgrade(towerModel))
         {
             // apply a custom display, if you want

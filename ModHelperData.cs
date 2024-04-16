@@ -2,8 +2,8 @@ namespace FourthPath;
 
 public static class ModHelperData
 {
-    public const string WorksOnVersion = "37.0";
-    public const string Version = "0.0.0";
+    public const string WorksOnVersion = "42.0";
+    public const string Version = "0.5.0";
     public const string Name = "AlchemistCombatPath";
 
     public const string Description = "Adds a fourth path to the Alchemist";

@@ -3,10 +3,10 @@
     <img align="right" alt="Download" height="75" src="https://raw.githubusercontent.com/gurrenm3/BTD-Mod-Helper/master/BloonsTD6%20Mod%20Helper/Resources/DownloadBtn.png">
 </a>
 
-<h1 align="center">Alchemist_Combat_Path</h1>
+<h1 align="center">Alchemist Combat Path</h1>
 
-This is an Alchemist Fourth Path mod using Paths++
+This is a mod that features a fourth path for the Alchemist designed to deal damage, rather than support another tower in dealing damage.
 
-It was designed to give the Alchemist tower viability as a tower that deals damage instead of just acting as support.
+Note: The tier 2 and tier 5 upgrades are designed specifically to enhance certain crosspathing upgrades.
 
 [![Requires BTD6 Mod Helper](https://raw.githubusercontent.com/gurrenm3/BTD-Mod-Helper/master/banner.png)](https://github.com/gurrenm3/BTD-Mod-Helper#readme)
